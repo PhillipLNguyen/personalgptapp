@@ -5,14 +5,12 @@ import pg8000
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from pyngrok import ngrok
 
 app = Flask(__name__)
 CORS(app, resources={r"/chat": {"origins": "*"}})
 app.config["PROPAGATE_EXCEPTIONS"] = True
 
 logging.basicConfig(level=logging.DEBUG)
-
 
 def add_cors_headers(response):
     logging.debug("Adding CORS headers")
@@ -21,9 +19,7 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Methods'] = 'POST'
     return response
 
-
 app.after_request(add_cors_headers)
-
 
 @app.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
@@ -118,29 +114,6 @@ def connect_to_cloud_sql():
     cnx = pg8000.connect(**connection_string)
     return cnx
 
-@app.route('/list_models', methods=['GET'])
-def list_models():
-    models = get_available_models()
-    return jsonify(models)
-
-def get_available_models():
-    api_key = "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"
-    url = "https://api.openai.com/v1/models"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-    }
-
-    response = requests.get(url, headers=headers)
-
-    if response.status_code == 200:
-        models = json.loads(response.text)
-        return models
-    else:
-        print(f"Error: {response.status_code}")
-        print(response.text)
-        return {"error": "Failed to fetch models"}
 
 if __name__ == '__main__':
-    public_url = ngrok.connect(5000, bind_tls=True)
-    print(" * ngrok tunnel: ", public_url)
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)), ssl_context=('cert.pem', 'key_without_passphrase.pem'))
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
